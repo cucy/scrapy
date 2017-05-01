@@ -17,10 +17,13 @@ class JobboleSpider(scrapy.Spider):
         :param response: 
         :return: 
         """
-        post_urls = response.css("#archive .floated-thumb .post-thumb a::attr(href)").extract()
-        for post_url in post_urls:
+        post_nodes = response.css("#archive .floated-thumb .post-thumb a")
+        for post_node in post_nodes:
             # response.url + post_url
-            yield Request(url=parse.urljoin(response.url, post_url), callback=self.parse_detail) #回调函数
+            image_url = post_node.css("img::attr(src)").extract_first("")
+            post_url = post_node.css("::attr(href)").extract_first("")
+
+            yield Request(url=parse.urljoin(response.url, post_url), meta={"front_image_url": image_url},callback=self.parse_detail) #回调函数
 
             # 提取下一页交给scrapy 下载
             next_urls = response.css(".next.page-numbers::attr(href)").extract_first("") # 两个class同时出现
@@ -56,6 +59,7 @@ class JobboleSpider(scrapy.Spider):
 
 
         # css选择器提取字段
+        front_image_url = response.meta.get("front_image_url", "") # 文章封面图
         title = response.css(".entry-header > h1::text").extract_first()
         create_date = response.css("p.entry-meta-hide-on-mobile::text").extract()[0].strip().replace(" ·","")
         praise_nums = response.css(".vote-post-up h10::text").extract()[0]
