@@ -68,12 +68,15 @@ ROBOTSTXT_OBEY = False
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 数字代表流到pipeline的处理顺序
-   'ArticleSpider.pipelines.ArticlespiderPipeline': 300,
+   # 'ArticleSpider.pipelines.ArticlespiderPipeline': 300,
     # "scrapy.pipelines.images.ImagesPipeline": 1,  # 先进入这个pipeline（ImagesPipeline） 自动将图片进行下载
 
-    'ArticleSpider.pipelines.ArticleImagepipeline': 1, # 使用自定义的 pipelines进行下载
+    # 'ArticleSpider.pipelines.ArticleImagepipeline': 1, # 使用自定义的 pipelines进行下载
     # 写入json文件
-    'ArticleSpider.pipelines.JsonItemExporterPipeline': 2,
+    # 'ArticleSpider.pipelines.JsonItemExporterPipeline': 2,
+    # 写入myql MysqlPipeline
+    'ArticleSpider.pipelines.MysqlTwistedPipline': 1,
+
 }
 IMAGES_URLS_FIELD = "front_image_url" # 获取图片url字段（items中指定的字段）
 
@@ -101,3 +104,11 @@ IMAGES_STORE = os.path.join(project_dir, 'images')
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+
+
+MYSQL_HOST = "192.168.1.107"
+MYSQL_DBNAME = "article_spider"
+MYSQL_USER = "zrd"
+MYSQL_PASSWORD = "123456"

@@ -6,7 +6,11 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import codecs
 import json
+import MySQLdb
+import MySQLdb.cursors
 
+
+from twisted.enterprise import adbapi
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy.exporters import JsonItemExporter
 
@@ -61,3 +65,66 @@ class JsonItemExporterPipeline(object):
     def process_item(self, item, spider):
         self.exporter.export_item(item )
         return item
+
+
+# 导入mysql数据库中
+class MysqlPipeline(object):
+    def __init__(self):
+        self.conn = MySQLdb.connect("192.168.1.107",  'zrd', '123456','article_spider',port=3306,charset='utf8', use_unicode=True)
+        self.cursor = self.conn.cursor()
+
+    def process_item(self, item, spider):
+        insert_sql = """ 
+       INSERT INTO `article_spider`.`jobbole_article`(title,url, create_date,  fav_nums, url_object_id)
+        VALUES (%s,%s, %s, %s,%s)
+        """
+        self.cursor.execute = (insert_sql, (item['title'], item['url'], item["create_date"], item["fav_nums"]))
+        self.conn.commit()
+        self.cursor.close()
+        self.conn.close()
+
+
+class MysqlTwistedPipline(object):
+    def __init__(self, dbpool):
+        self.dbpool = dbpool
+
+    @classmethod
+    def from_settings(cls, settings):
+        dbparms = dict(
+            host = settings["MYSQL_HOST"],
+            db = settings["MYSQL_DBNAME"],
+            user = settings["MYSQL_USER"],
+            passwd = settings["MYSQL_PASSWORD"],
+            charset='utf8',
+            cursorclass=MySQLdb.cursors.DictCursor,
+            use_unicode=True,
+        )
+        dbpool = adbapi.ConnectionPool("MySQLdb", **dbparms)
+
+        return cls(dbpool)
+
+    def process_item(self, item, spider):
+        #使用twisted将mysql插入变成异步执行
+        query = self.dbpool.runInteraction(self.do_insert, item)
+        query.addErrback(self.handle_error, item, spider) #处理异常
+
+    def handle_error(self, failure, item, spider):
+        # 处理异步插入的异常
+        if failure:
+            print (failure)
+
+
+    def do_insert(self, cursor, item):
+        #执行具体的插入
+        #根据不同的item 构建不同的sql语句并插入到mysql中
+        # insert_sql, params = item.get_insert_sql()
+        # print (insert_sql, params)
+        insert_sql = """
+                    insert into jobbole_article(title, url, create_date, fav_nums)
+                    VALUES (%s, %s, %s, %s)
+                """
+        cursor.execute(insert_sql, (item["title"], item["url"], item["create_date"], item["fav_nums"]))
+        pass
+
+
+

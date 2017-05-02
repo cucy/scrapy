@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from datetime import datetime
 import re
 from scrapy.http import Request
 from urllib import parse
@@ -59,11 +60,17 @@ class JobboleSpider(scrapy.Spider):
         content = response.css("div.entry").extract()[0]
         tags = response.css("p.entry-meta-hide-on-mobile a::text").extract()[0]
         tag_list = [elment for elment in tags if not elment.strip().endswith("评论")]
-        tags = ",".join(tag_list)
+        tags = "".join(tag_list)
 
         article_item["url_object_id"] = get_md5(response.url)
         article_item["title"] = title
         article_item["url"] = response.url
+
+        try:
+            create_date = datetime.strptime(create_date, "%Y/%m/%d").date()
+
+        except Exception as e :
+            create_date = datetime.now().date()
         article_item["create_date"] = create_date
         article_item["front_image_url"] = [front_image_url, ]
         article_item["praise_nums"] = praise_nums
