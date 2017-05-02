@@ -9,10 +9,10 @@ import json
 import MySQLdb
 import MySQLdb.cursors
 
-
 from twisted.enterprise import adbapi
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy.exporters import JsonItemExporter
+
 
 # 主要做数据存储 已经数据处理
 class ArticlespiderPipeline(object):
@@ -20,30 +20,28 @@ class ArticlespiderPipeline(object):
         return item
 
 
-class ArticleImagepipeline(ImagesPipeline):
+class ArticleImagePipeline(ImagesPipeline):
     """
         将下载图片的url和保存在本地图片名字进行join
     """
-
     def item_completed(self, results, item, info):
-        """ 
-            results 保存的是本地实际存储路径
-        """
-        for ok, values in results:
-            image_file_path = values["path"]
-        item["front_image_path"] = image_file_path
+        if "front_image_url" in item:
+            for ok, value in results:
+                image_file_path = value["path"]
+            item["front_image_path"] = image_file_path
+
         return item
-        pass
+
 
 
 # 自定义数据保存到json文件中
 class JsonWithEncodingPipeline(object):
     def __init__(self):
-        self.file = codecs.open("article.json", 'w',encoding='utf-8')
+        self.file = codecs.open("article.json", 'w', encoding='utf-8')
 
     def process_item(self, item, spider):
         # ensure_ascii 防止中文写入不正常
-        lines  = json.dumps(dict(item), ensure_ascii=False) + '\n'
+        lines = json.dumps(dict(item), ensure_ascii=False) + '\n'
         self.file.write(lines)
         return item
 
@@ -63,14 +61,15 @@ class JsonItemExporterPipeline(object):
         self.file.close()
 
     def process_item(self, item, spider):
-        self.exporter.export_item(item )
+        self.exporter.export_item(item)
         return item
 
 
 # 导入mysql数据库中
 class MysqlPipeline(object):
     def __init__(self):
-        self.conn = MySQLdb.connect("192.168.1.107",  'zrd', '123456','article_spider',port=3306,charset='utf8', use_unicode=True)
+        self.conn = MySQLdb.connect("192.168.1.107", 'zrd', '123456', 'article_spider', port=3306, charset='utf8',
+                                    use_unicode=True)
         self.cursor = self.conn.cursor()
 
     def process_item(self, item, spider):
@@ -91,10 +90,10 @@ class MysqlTwistedPipline(object):
     @classmethod
     def from_settings(cls, settings):
         dbparms = dict(
-            host = settings["MYSQL_HOST"],
-            db = settings["MYSQL_DBNAME"],
-            user = settings["MYSQL_USER"],
-            passwd = settings["MYSQL_PASSWORD"],
+            host=settings["MYSQL_HOST"],
+            db=settings["MYSQL_DBNAME"],
+            user=settings["MYSQL_USER"],
+            passwd=settings["MYSQL_PASSWORD"],
             charset='utf8',
             cursorclass=MySQLdb.cursors.DictCursor,
             use_unicode=True,
@@ -104,19 +103,18 @@ class MysqlTwistedPipline(object):
         return cls(dbpool)
 
     def process_item(self, item, spider):
-        #使用twisted将mysql插入变成异步执行
+        # 使用twisted将mysql插入变成异步执行
         query = self.dbpool.runInteraction(self.do_insert, item)
-        query.addErrback(self.handle_error, item, spider) #处理异常
+        query.addErrback(self.handle_error, item, spider)  # 处理异常
 
     def handle_error(self, failure, item, spider):
         # 处理异步插入的异常
         if failure:
-            print (failure)
-
+            print(failure)
 
     def do_insert(self, cursor, item):
-        #执行具体的插入
-        #根据不同的item 构建不同的sql语句并插入到mysql中
+        # 执行具体的插入
+        # 根据不同的item 构建不同的sql语句并插入到mysql中
         # insert_sql, params = item.get_insert_sql()
         # print (insert_sql, params)
         insert_sql = """
@@ -125,6 +123,3 @@ class MysqlTwistedPipline(object):
                 """
         cursor.execute(insert_sql, (item["title"], item["url"], item["create_date"], item["fav_nums"]))
         pass
-
-
-
