@@ -14,7 +14,15 @@ class ArticlespiderItem(scrapy.Item):
     pass
 
 
-class ArticlesItem(scrapy.Item):
+class JobBoleArticlesItem(scrapy.Item):
     title = scrapy.Field()
     create_date = scrapy.Field()
     url = scrapy.Field()
+    front_image_url = scrapy.Field() # 封面图
+    front_image_path = scrapy.Field() # 封面图本地存放路径
+    praise_nums = scrapy.Field() # 点赞数量
+    comment_nums = scrapy.Field() # 评论数量
+    fav_nums = scrapy.Field() # 收藏数量
+    tags = scrapy.Field() # 标签
+    content = scrapy.Field() # 正文
+
