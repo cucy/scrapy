@@ -8,6 +8,7 @@ import codecs
 import json
 
 from scrapy.pipelines.images import ImagesPipeline
+from scrapy.exporters import JsonItemExporter
 
 # 主要做数据存储 已经数据处理
 class ArticlespiderPipeline(object):
@@ -31,7 +32,7 @@ class ArticleImagepipeline(ImagesPipeline):
         pass
 
 
-# 数据保存到json文件中
+# 自定义数据保存到json文件中
 class JsonWithEncodingPipeline(object):
     def __init__(self):
         self.file = codecs.open("article.json", 'w',encoding='utf-8')
@@ -44,3 +45,19 @@ class JsonWithEncodingPipeline(object):
 
     def spider_close(self):
         self.file.close()
+
+
+# json 调用scrapy导出json
+class JsonItemExporterPipeline(object):
+    def __init__(self):
+        self.file = open('articleJsonItemExporter.json', 'wb')
+        self.exporter = JsonItemExporter(self.file, encoding='utf-8')
+        self.exporter.start_exporting()
+
+    def close_spider(self, spider):
+        self.exporter.finish_exporting()
+        self.file.close()
+
+    def process_item(self, item, spider):
+        self.exporter.export_item(item )
+        return item
