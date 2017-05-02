@@ -72,6 +72,8 @@ ITEM_PIPELINES = {
     # "scrapy.pipelines.images.ImagesPipeline": 1,  # 先进入这个pipeline（ImagesPipeline） 自动将图片进行下载
 
     'ArticleSpider.pipelines.ArticleImagepipeline': 1, # 使用自定义的 pipelines进行下载
+    # 写入json文件
+    'ArticleSpider.pipelines.JsonWithEncodingPipeline': 2,
 }
 IMAGES_URLS_FIELD = "front_image_url" # 获取图片url字段（items中指定的字段）
 
