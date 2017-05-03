@@ -9,6 +9,11 @@ import datetime, re
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose, TakeFirst, Join
+from ArticleSpider.utils.common import extract_num
+
+from ArticleSpider.utils.common import extract_num
+from ArticleSpider.settings import SQL_DATETIME_FORMAT, SQL_DATE_FORMAT
+from w3lib.html import remove_tags
 
 
 class ArticlespiderItem(scrapy.Item):
@@ -44,8 +49,9 @@ def get_nums(value):
 
     return nums
 
+
 def remove_comment_tags(value):
-    #去掉tag中提取的评论
+    # 去掉tag中提取的评论
     if "评论" in value:
         return ""
     else:
@@ -86,10 +92,26 @@ class JobBoleArticlesItem(scrapy.Item):
     )  # 标签
     content = scrapy.Field()  # 正文
 
+    def get_insert_sql(self):
+        insert_sql = """
+            insert into jobbole_article(title, url, create_date, fav_nums, front_image_url, front_image_path,
+            praise_nums, comment_nums, tags, content)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE content=VALUES(fav_nums)
+        """
+
+        fron_image_url = ""
+        # content = remove_tags(self["content"])
+
+        if self["front_image_url"]:
+            fron_image_url = self["front_image_url"][0]
+        params = (self["title"], self["url"], self["create_date"], self["fav_nums"],
+                  fron_image_url, self["front_image_path"], self["praise_nums"], self["comment_nums"],
+                  self["tags"], self["content"])
+        return insert_sql, params
 
 
 class ZhihuQuestionItem(scrapy.Item):
-    #知乎的问题 item
+    # 知乎的问题 item
     zhihu_id = scrapy.Field()
     topics = scrapy.Field()
     url = scrapy.Field()
@@ -102,7 +124,7 @@ class ZhihuQuestionItem(scrapy.Item):
     crawl_time = scrapy.Field()
 
     def get_insert_sql(self):
-        #插入知乎question表的sql语句
+        # 插入知乎question表的sql语句
         insert_sql = """
             insert into zhihu_question(zhihu_id, topics, url, title, content, answer_num, comments_num,
               watch_user_num, click_num, crawl_time
@@ -133,8 +155,9 @@ class ZhihuQuestionItem(scrapy.Item):
 
         return insert_sql, params
 
+
 class ZhihuAnswerItem(scrapy.Item):
-    #知乎的问题回答item
+    # 知乎的问题回答item
     zhihu_id = scrapy.Field()
     url = scrapy.Field()
     question_id = scrapy.Field()
@@ -147,7 +170,7 @@ class ZhihuAnswerItem(scrapy.Item):
     crawl_time = scrapy.Field()
 
     def get_insert_sql(self):
-        #插入知乎question表的sql语句
+        # 插入知乎question表的sql语句
         insert_sql = """
             insert into zhihu_answer(zhihu_id, url, question_id, author_id, content, parise_num, comments_num,
               create_time, update_time, crawl_time
