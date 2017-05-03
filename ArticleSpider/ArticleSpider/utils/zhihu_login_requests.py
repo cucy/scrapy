@@ -97,7 +97,8 @@ def zhihu_login(account, password):
             post_data = {
                 "_xsrf": get_xsrf(),
                 "email": account,
-                "password": password
+                "password": password,
+                "captcha": get_captcha(),
             }
 
     response_text = session.post(post_url, data=post_data, headers=header)
