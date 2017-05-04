@@ -24,6 +24,7 @@ class ArticleImagePipeline(ImagesPipeline):
     """
         将下载图片的url和保存在本地图片名字进行join
     """
+
     def item_completed(self, results, item, info):
         if "front_image_url" in item:
             for ok, value in results:
@@ -31,7 +32,6 @@ class ArticleImagePipeline(ImagesPipeline):
             item["front_image_path"] = image_file_path
 
         return item
-
 
 
 # 自定义数据保存到json文件中
@@ -72,8 +72,6 @@ class MysqlPipeline(object):
                                     use_unicode=True)
         self.cursor = self.conn.cursor()
 
-
-
     def process_item(self, item, spider):
         insert_sql = """ 
        INSERT INTO `article_spider`.`jobbole_article`(title,url, create_date,  fav_nums, url_object_id)
@@ -85,6 +83,7 @@ class MysqlPipeline(object):
         self.conn.close()
 
 
+# Twisted导入mysql数据库中
 class MysqlTwistedPipline(object):
     def __init__(self, dbpool):
         self.dbpool = dbpool
@@ -121,4 +120,3 @@ class MysqlTwistedPipline(object):
         # print (insert_sql, params)
         insert_sql, params = item.get_insert_sql()
         cursor.execute(insert_sql, params)
-
