@@ -9,9 +9,9 @@ import datetime, re
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose, TakeFirst, Join
-from ArticleSpider.utils.common import extract_num
+from ArticleSpider.tools.common import extract_num
 
-from ArticleSpider.utils.common import extract_num
+from ArticleSpider.tools.common import extract_num
 from ArticleSpider.settings import SQL_DATETIME_FORMAT, SQL_DATE_FORMAT
 from w3lib.html import remove_tags
 

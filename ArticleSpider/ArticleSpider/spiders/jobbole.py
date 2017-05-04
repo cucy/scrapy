@@ -6,7 +6,7 @@ from scrapy.http import Request
 from urllib import parse
 
 from ArticleSpider.items import JobBoleArticlesItem, ArticleItemLoader
-from ArticleSpider.utils.common import get_md5
+from ArticleSpider.tools.common import get_md5
 from scrapy.loader import ItemLoader
 
 
